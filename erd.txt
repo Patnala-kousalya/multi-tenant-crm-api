@@ -1,0 +1,16 @@
+Organization
+- id (PK)
+- name
+
+User
+- id (PK)
+- email
+- hashed_password
+- role
+- organization_id (FK)
+
+Contact
+- id (PK)
+- name
+- email
+- organization_id (FK)
