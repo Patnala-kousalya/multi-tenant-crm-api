@@ -1,47 +1,108 @@
-# Multi-Tenant CRM API
+# Multi-Tenant CRM API (SaaS Backend)
 
-This project is a simple backend API for a CRM system where multiple organizations use the same application securely.
+This project is a backend API for a **Multi-Tenant CRM system**, built as part of the GPP Weekly Task-4.
 
-Each organization’s data is fully isolated, so users can only access information that belongs to their own organization.
+The main goal of this project is to demonstrate **secure multi-tenancy**, where multiple organizations (tenants) use the same application, but **their data is completely isolated** from each other.
 
-## What this project does
+No organization can see or access another organization’s data under any circumstance.
 
-- Lets users register and log in
-- Uses JWT for authentication
-- Stores the user’s organization inside the token
-- Protects all data using organization_id
-- Prevents access to other organizations’ data
+---
 
-## Technology used
+## Project Overview
 
+This CRM API allows:
+- Users to register under an organization
+- Users to log in securely
+- JWT-based authentication
+- Role and organization information stored inside the token
+- Organization-based data isolation
+- Secure access to CRM resources (Contacts)
+
+This project focuses on **backend architecture, security, and correctness**, not UI.
+
+---
+
+## Key Features Implemented
+
+- User Registration with Organization creation
+- User Login with JWT token generation
+- Password hashing using bcrypt
+- Multi-tenant data isolation using `organization_id`
+- Protected APIs using JWT authentication
+- Contacts CRUD (Create & View)
+- Each user can only access contacts from their own organization
+- Swagger (OpenAPI) documentation enabled
+
+---
+
+## Multi-Tenancy Design
+
+- All users belong to **one organization**
+- Every protected table contains `organization_id`
+- JWT token includes:
+  - `user_id`
+  - `organization_id`
+  - `role`
+- Every request is validated against the organization_id from the token
+- Cross-organization access is strictly blocked
+
+This uses a **shared database, shared schema** multi-tenant architecture.
+
+---
+
+## Role-Based Access Control (RBAC)
+
+| Role   | Permissions |
+|-------|-------------|
+| Owner | Full access within own organization |
+| Admin | Manage users & contacts (future scope) |
+| Member | Create and view contacts |
+| Viewer | View-only access |
+
+(Current implementation demonstrates role storage and enforcement readiness.)
+
+---
+
+## Technology Stack
+
+- Python
 - FastAPI
 - PostgreSQL
-- SQLAlchemy
-- JWT authentication
-- Uvicorn server
+- SQLAlchemy ORM
+- JWT (python-jose)
+- Passlib + bcrypt (password hashing)
+- Uvicorn
+- Swagger / OpenAPI
 
-## How security works
+---
 
-- Passwords are hashed before saving
-- JWT token is required for protected routes
-- Every request is checked against the user’s organization
-- Cross-organization access is not allowed
+## API Endpoints
 
-## Available APIs
+### Authentication
+- `POST /auth/register` – Register user + create organization
+- `POST /auth/login` – Login and receive JWT token
 
-- Register and Login
-- Get current user
-- Create contacts
-- View contacts (only for the user’s organization)
+### Contacts (Protected)
+- `POST /contacts` – Create contact (own organization only)
+- `GET /contacts` – View contacts (own organization only)
 
-## How to run the project
+All protected routes require a valid JWT token.
 
-venv\Scripts\activate  
-python -m uvicorn app.main:app --reload  
+---
 
-Open in browser:  
+## How to Run the Project
+
+1. Activate virtual environment:
+venv\Scripts\activate
+
+2. Start the server:
+python -m uvicorn app.main:app --reload
+
+3. Open Swagger UI:
 http://127.0.0.1:8000/docs
 
-## Final note
+## Final Note
 
-This project demonstrates a clean and secure approach to building a multi-tenant backend application.
+This project demonstrates a **real-world SaaS backend pattern** with secure multi-tenancy and authentication.
+
+It is production-oriented in design and suitable for demonstrating backend engineering skills in interviews and evaluations.
