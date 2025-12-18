@@ -1,0 +1,47 @@
+# Multi-Tenant CRM API
+
+This project is a simple backend API for a CRM system where multiple organizations use the same application securely.
+
+Each organization’s data is fully isolated, so users can only access information that belongs to their own organization.
+
+## What this project does
+
+- Lets users register and log in
+- Uses JWT for authentication
+- Stores the user’s organization inside the token
+- Protects all data using organization_id
+- Prevents access to other organizations’ data
+
+## Technology used
+
+- FastAPI
+- PostgreSQL
+- SQLAlchemy
+- JWT authentication
+- Uvicorn server
+
+## How security works
+
+- Passwords are hashed before saving
+- JWT token is required for protected routes
+- Every request is checked against the user’s organization
+- Cross-organization access is not allowed
+
+## Available APIs
+
+- Register and Login
+- Get current user
+- Create contacts
+- View contacts (only for the user’s organization)
+
+## How to run the project
+
+venv\Scripts\activate  
+python -m uvicorn app.main:app --reload  
+
+Open in browser:  
+http://127.0.0.1:8000/docs
+
+## Final note
+
+This project demonstrates a clean and secure approach to building a multi-tenant backend application.
