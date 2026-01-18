@@ -1,120 +1,107 @@
 # Multi-Tenant CRM API (SaaS Backend)
 
-This project is a backend API for a **Multi-Tenant CRM system**, built as part of the **GPP Weekly Task-4**.
-
-The main objective of this project is to demonstrate **secure multi-tenancy**, where multiple organizations (tenants) use the same application while ensuring **strict data isolation**.
-
-No organization can access or view another organization’s data under any circumstance.
-
----
+This project is a backend API for a Multi-Tenant CRM system, built as part of the GPP Weekly Task-4. The goal of this application is to demonstrate secure multi-tenancy, where multiple organizations (tenants) share the same application while maintaining strict data isolation. No organization can access or view another organization’s data under any circumstance.
 
 ## Project Overview
 
-This CRM API provides:
+The backend supports:
 - User registration under an organization
-- Secure user login
-- JWT-based authentication
-- Organization and role embedded inside JWT tokens
-- Organization-level data isolation
-- Protected CRM resources (Contacts)
+- Secure login via JWT
+- Organization and role stored inside tokens
+- Tenant-based data isolation
+- Protected CRUD operations for CRM contacts
 
-This project focuses on **backend architecture, security, and correctness**, not UI.
+This project focuses on backend architecture, security, and correctness, not UI.
 
----
+## Key Features
 
-## Key Features Implemented
-
-- User Registration with automatic Organization creation
-- User Login with JWT token generation
-- Password hashing using bcrypt
-- Multi-tenant data isolation using `organization_id`
-- Protected APIs using JWT authentication
-- Contacts CRUD (Create & View)
-- Users can only access contacts belonging to their own organization
-- Swagger (OpenAPI) documentation enabled
-
----
+- User registration with automatic organization creation
+- User login with JWT token generation
+- Password hashing via bcrypt (Passlib)
+- Multi-tenant isolation using organization_id
+- Protected API routes with JWT authentication
+- Contacts CRUD (create & view)
+- Users can only access data from their own organization
+- Swagger/OpenAPI documentation enabled
+- Test suite validates authentication, RBAC, and multi-tenancy
 
 ## Multi-Tenancy Architecture
 
-- Each user belongs to exactly one organization
-- All protected database tables include `organization_id`
-- JWT token contains:
-  - `user_id`
-  - `organization_id`
-  - `role`
-- Every request validates organization ownership
-- Cross-organization access is strictly blocked
+- Each user belongs to one organization
+- Protected tables include organization_id
+- JWT tokens include user_id, organization_id, and role
+- Every request enforces tenant boundaries
+- Cross-tenant access is blocked at application layer
 
-This project uses a **shared database, shared schema** multi-tenant design.
-
----
+Architecture model used: Shared Database + Shared Schema, a common SaaS pattern balancing performance, cost, and scalability.
 
 ## Role-Based Access Control (RBAC)
 
 | Role   | Permissions |
-|-------|-------------|
-| Owner | Full access within own organization |
-| Admin | Manage users & contacts (future scope) |
-| Member | Create and view contacts |
-| Viewer | View-only access |
+|--------|-------------|
+| Owner  | Full access within organization |
+| Admin  | Manage users & contacts (future scope) |
+| Member | Create & view contacts |
+| Viewer | View contacts only |
 
-(Current implementation stores roles and is RBAC-ready.)
-
----
+The implementation stores roles and enforces them through authorization layers.
 
 ## Technology Stack
 
 - Python
 - FastAPI
-- PostgreSQL
 - SQLAlchemy ORM
+- PostgreSQL
 - JWT (python-jose)
-- Passlib + bcrypt (password hashing)
+- Passlib (bcrypt)
 - Uvicorn
-- Swagger / OpenAPI
-
----
+- Swagger/OpenAPI
 
 ## API Endpoints
 
-### Authentication
-- `POST /auth/register` – Register user and create organization
-- `POST /auth/login` – Login and receive JWT token
+Authentication:
+- POST /auth/register → Register user + create organization
+- POST /auth/login → Login and receive JWT token
 
-### Contacts (Protected)
-- `POST /contacts` – Create contact (own organization only)
-- `GET /contacts` – View contacts (own organization only)
+Contacts (Protected):
+- POST /contacts → Create contact (tenant-scoped)
+- GET /contacts → List contacts (tenant-scoped)
 
-All protected routes require a valid JWT token.
+All protected endpoints require Authorization: Bearer <token>.
 
----
+## Running the Project
 
-## How to Run the Project
+1. Copy environment template  
+cp .env.example .env
 
-1. Activate virtual environment:
-```
+2. Activate virtual environment  
 venv\Scripts\activate
-```
 
-2. Start the server:
-```
+3. Run server  
 python -m uvicorn app.main:app --reload
-```
 
-3. Open Swagger UI:
-```
+4. Open Swagger UI  
 http://127.0.0.1:8000/docs
-```
-Security Tests:
-- User from Org A cannot access contacts from Org B
-- JWT token required for protected routes
-- Invalid token returns 401
 
----
+## Security Behaviors Verified
+
+- Users from one organization cannot access another organization’s contacts
+- Token required for protected routes (401 otherwise)
+- Invalid/expired tokens reject access
+- Passwords stored using bcrypt hashing
+- Tenant isolation enforced at ORM query level
+
+## Testing
+
+Automated tests include:
+✔ Authentication  
+✔ RBAC  
+✔ Tenant isolation  
+✔ Contact CRUD  
+
+Run tests:
+pytest -q
 
 ## Final Note
 
-This project demonstrates a **real-world SaaS backend pattern** with secure multi-tenancy, authentication, and data isolation.
-
-It is production-oriented in design and suitable for backend engineering evaluations and interviews.
+This project demonstrates a production-oriented SaaS backend architecture with multi-tenancy, RBAC, JWT authentication, and strict data isolation. It aligns with real-world backend engineering standards and is suitable for portfolio and evaluation use.
