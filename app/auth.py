@@ -3,17 +3,26 @@ from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from jose import jwt
+from sqlalchemy.exc import IntegrityError
+from fastapi import HTTPException, status
+from dotenv import load_dotenv
+import os
 
 from app.database import get_db
 from app import models, schemas
+
+load_dotenv()
 
 router = APIRouter()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-SECRET_KEY = "super_secret_key"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60))
+
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY is missing! Set it in your .env file.")
 
 
 def hash_password(password: str):
@@ -31,29 +40,37 @@ def create_access_token(data: dict):
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
+
+
 @router.post("/register")
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.query(models.User).filter(models.User.email == user.email).first()
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+    try:
+        existing_user = db.query(models.User).filter(models.User.email == user.email).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already registered")
 
-    org = models.Organization(name=user.organization_name)
-    db.add(org)
-    db.commit()
-    db.refresh(org)
+        org = models.Organization(name=user.organization_name)
+        db.add(org)
+        db.commit()
+        db.refresh(org)
 
-    new_user = models.User(
-        email=user.email,
-        hashed_password=hash_password(user.password),
-        role="owner",
-        organization_id=org.id
-    )
+        new_user = models.User(
+            email=user.email,
+            hashed_password=hash_password(user.password),
+            role="owner",
+            organization_id=org.id
+        )
+        db.add(new_user)
+        db.commit()
 
-    db.add(new_user)
-    db.commit()
+        return {"message": "User registered successfully"}
 
-    return {"message": "User registered successfully"}
-
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Organization name already exists"
+        )
 
 @router.post("/login")
 def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
